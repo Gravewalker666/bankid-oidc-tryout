@@ -17,7 +17,7 @@ public class IndexServlet extends HttpServlet {
                 .append("<head>")
                 .append("</head>")
                 .append("<body>")
-                .append("<a href=\"/login\">Sign in with BankId</a>")
+                .append("<a href=\"login\">Sign in with BankId</a>")
                 .append("</body>")
                 .append("</html>");
     }
