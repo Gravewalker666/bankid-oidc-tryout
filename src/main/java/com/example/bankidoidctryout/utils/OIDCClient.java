@@ -13,9 +13,11 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 public class OIDCClient {
     private static OIDCClient oidcClient;
+    private static final Logger logger = Logger.getLogger(OIDCClient.class.getName());
 
     public static OIDCClient getInstance() throws IOException {
         if (oidcClient != null) return oidcClient;
@@ -49,15 +51,15 @@ public class OIDCClient {
         );
     }
 
-    public JsonObject makeTokenRequest(String code) {
+    public TokenWrapper makeTokenRequest(String code) {
         String clientId = properties.getProperty("client-id");
         String clientSecret = properties.getProperty("client-secret");
         String redirectUrl = properties.getProperty("redirect-url");
 
         MultivaluedHashMap<String, String> formData = new MultivaluedHashMap<>();
-        formData.add("grant-type", "authorization_code");
+        formData.add("grant_type", "authorization_code");
         formData.add("code", code);
-        formData.add("redirect-uri", redirectUrl);
+        formData.add("redirect_uri", redirectUrl);
 
         Client client = ClientBuilder.newClient();
         Response response = client.target(tokenUrl).request().header(
@@ -66,7 +68,12 @@ public class OIDCClient {
                                 (clientId + ":" + clientSecret).getBytes(StandardCharsets.UTF_8)
                         )
         ).post(Entity.form(formData));
-        return new Gson().fromJson(response.readEntity(String.class), JsonObject.class);
+        JsonObject responseBody = new Gson().fromJson(response.readEntity(String.class), JsonObject.class);
+        logger.info(responseBody.toString());
+        return new TokenWrapper(
+                responseBody.get("access_token").toString(),
+                responseBody.get("id_token").getAsString()
+        );
     }
 
     private String encode(String text) {
