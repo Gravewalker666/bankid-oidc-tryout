@@ -42,12 +42,13 @@ public class OIDCClient {
     public String getAuthenticationUrl() {
         String clientId = encode(properties.getProperty("client-id"));
         String redirectedUrl = encode(properties.getProperty("redirect-url"));
+        String scopes = encode("openid nnin_altsub profile");
         return String.format(
                 "%s?client_id=%s" +
                 "&scope=%s" +
                 "&redirect_uri=%s" +
                 "&response_type=%s",
-                authenticationUrl, clientId, "openid+profile", redirectedUrl, "code"
+                authenticationUrl, clientId, scopes, redirectedUrl, "code"
         );
     }
 
@@ -68,8 +69,8 @@ public class OIDCClient {
                                 (clientId + ":" + clientSecret).getBytes(StandardCharsets.UTF_8)
                         )
         ).post(Entity.form(formData));
+
         JsonObject responseBody = new Gson().fromJson(response.readEntity(String.class), JsonObject.class);
-        logger.info(responseBody.toString());
         return new TokenWrapper(
                 responseBody.get("access_token").toString(),
                 responseBody.get("id_token").getAsString()
