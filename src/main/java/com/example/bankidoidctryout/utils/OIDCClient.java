@@ -5,10 +5,8 @@ import com.google.gson.JsonObject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.Response;
-import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 
 import java.io.IOException;
 import java.net.URLEncoder;
