@@ -1,5 +1,6 @@
 package com.example.bankidoidctryout;
 
+import com.example.bankidoidctryout.utils.OIDCClient;
 import com.example.bankidoidctryout.utils.TokenWrapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -22,9 +23,12 @@ public class GetVASServlet extends HttpServlet {
         };
         String idTokenPayloadString = new String(Base64.getDecoder().decode(tokens.getIdToken().split("\\.")[1]));
         JsonObject idTokenPayload = new Gson().fromJson(idTokenPayloadString, JsonObject.class);
+        System.out.println(tokens.getAccessToken());
+        JsonObject userInfoPayload = OIDCClient.getInstance().makeUserInfoRequest(tokens.getAccessToken());
         response.setContentType("text/html");
         response.getWriter()
-                .append("<p> bankid: ")
+                .append("<h3>Information in the id token payload </br> Scope: profile nnin_altsub</h3>")
+                .append("<p> nnin: ")
                 .append(idTokenPayload.get("nnin_altsub").getAsString())
                 .append("</p>")
                 .append("<p> name: ")
@@ -38,6 +42,10 @@ public class GetVASServlet extends HttpServlet {
                 .append("</p>")
                 .append("<p> birthDate: ")
                 .append(idTokenPayload.get("birthdate").getAsString())
+                .append("</p>")
+                .append("<h3>Information retrieved from the user info VAS service </br> Scope: address phone email</h3>")
+                .append("<p> phone: ")
+                .append(userInfoPayload.get("phone_number").getAsString())
                 .append("</p>");
     }
 }

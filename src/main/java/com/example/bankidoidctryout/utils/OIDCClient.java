@@ -5,8 +5,10 @@ import com.google.gson.JsonObject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.Response;
+import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -26,6 +28,7 @@ public class OIDCClient {
 
     private final String authenticationUrl;
     private final String tokenUrl;
+    private final String userInfoUrl;
     private final Properties properties;
 
     public OIDCClient() throws IOException {
@@ -37,12 +40,13 @@ public class OIDCClient {
         JsonObject configurations = new Gson().fromJson(response.readEntity(String.class), JsonObject.class);
         this.authenticationUrl = configurations.get("authorization_endpoint").getAsString();
         this.tokenUrl = configurations.get("token_endpoint").getAsString();
+        this.userInfoUrl = configurations.get("userinfo_endpoint").getAsString();
     }
 
     public String getAuthenticationUrl() {
         String clientId = encode(properties.getProperty("client-id"));
         String redirectedUrl = encode(properties.getProperty("redirect-url"));
-        String scopes = encode("openid nnin_altsub profile");
+        String scopes = encode("openid nnin_altsub profile address email phone");
         return String.format(
                 "%s?client_id=%s" +
                 "&scope=%s" +
@@ -71,10 +75,24 @@ public class OIDCClient {
         ).post(Entity.form(formData));
 
         JsonObject responseBody = new Gson().fromJson(response.readEntity(String.class), JsonObject.class);
+        System.out.println(responseBody.get("access_token").toString());
         return new TokenWrapper(
                 responseBody.get("access_token").toString(),
                 responseBody.get("id_token").getAsString()
         );
+    }
+
+    public JsonObject makeUserInfoRequest(String accessToken) {
+        Client client = ClientBuilder.newClient();
+        accessToken = accessToken.replace("\"", "");
+        String headerValue = "Bearer " + accessToken;
+        System.out.println(headerValue);
+        Response response = client.target(userInfoUrl).request().header("Authorization", headerValue)
+                .get();
+        String responseBody = response.readEntity(String.class);
+        System.out.println(response.getStatus());
+        System.out.println(responseBody);
+        return null;
     }
 
     private String encode(String text) {
